@@ -4,15 +4,17 @@
 [![Skill](https://img.shields.io/badge/Skill-v2.4.0-green.svg)](CHANGELOG.md)
 [![Sponsored by Electi](https://img.shields.io/badge/Sponsored%20by-Electi-red.svg)](https://www.electiconsulting.com)
 
-**Stop watching Claude go off the rails on complex tasks.**
+**Complex tasks break AI agents. This skill fixes that.**
 
-AI coding agents fail in predictable ways. They plan once, execute linearly, and when something breaks, they pile on fixes until the codebase is buried under wrappers, adapters, and "temporary" workarounds. By the time context rot kicks in, they've forgotten what they were even trying to do.
+You've seen it happen. Claude starts strong, plans once, then hits a wall. Instead of stepping back, it starts layering -- fixes on top of fixes, losing track of what it already tried. By the time context rot kicks in, it's forgotten what it was even trying to do. The result is worse than where it started.
 
-Iterative Planner is a Claude Code skill that replaces this pattern with a disciplined cycle: **Explore, Plan, Execute, Reflect, Re-plan.** It uses the filesystem as persistent working memory -- so when the context window inevitably fills up, nothing is lost. Every decision, every failed approach, every discovery is written to disk and available for recovery -- not just within a single plan, but across plans.
+**Iterative Planner kills this pattern dead.** It's a Claude Code skill that enforces a rigorous state machine: **Explore → Plan → Execute → Reflect → Re-plan.** The filesystem becomes persistent working memory -- every decision, every failed approach, every discovery is written to disk. When the context window inevitably fills up, nothing is lost. Not within a single plan, not across plans, not across sessions.
+
+Whether you're refactoring a codebase, researching a complex topic, designing a system architecture, or working through any multi-step problem -- the planner keeps Claude structured, recoverable, and under your control.
 
 ---
 
-## Quick Start
+## Get Started in 60 Seconds
 
 **Option 1 -- Zip package (recommended)**
 Download the zip from [Releases](https://github.com/NikolasMarkou/iterative-planner/releases) and unzip into your local skills directory:
@@ -24,13 +26,13 @@ unzip iterative-planner-v*.zip -d ~/.claude/skills/
 Download `iterative-planner-combined.md` from [Releases](https://github.com/NikolasMarkou/iterative-planner/releases) and paste it into Claude's Custom Instructions.
 > Note: The single-file version does not include `bootstrap.mjs`. Plan directories must be created manually. For full bootstrap support, use the zip package.
 
-Then give Claude a complex task, or just say: **"plan this"**
+Then give Claude a complex task -- or just say: **"plan this"**
 
 ---
 
 ## How It Works
 
-The skill is a six-state machine. Every transition is logged. Every decision is recorded. The filesystem is the source of truth -- not the context window.
+Six states. Every transition logged. Every decision recorded. The filesystem is the source of truth -- not the context window.
 
 ```mermaid
 stateDiagram-v2
@@ -47,54 +49,55 @@ stateDiagram-v2
     CLOSE --> [*]
 ```
 
-| State | What happens | Boundaries |
+| State | What happens | Guardrails |
 |-------|-------------|------------|
-| **EXPLORE** | Read code, search, ask questions, map the problem. Read consolidated findings/decisions from previous plans. | Read-only on project files. All notes go to the plan directory. |
-| **PLAN** | Design the approach. List every file to touch. Set success criteria. | No code changes. User must approve before execution begins. |
-| **EXECUTE** | Implement one step at a time. Commit after each success. | 2 fix attempts max per step. Revert-first on failure. Surprise discoveries → REFLECT. |
-| **REFLECT** | Compare results against written criteria. Check if findings still hold. | Evidence-based. Contradicted findings → back to EXPLORE. |
-| **RE-PLAN** | Pivot based on what was learned. Correct wrong findings. Log the decision. | Must explain what failed and why. User approves new direction. |
-| **CLOSE** | Write summary. Audit decision anchors. Merge findings and decisions to consolidated files. | Verify no leftover debug code or orphaned imports. |
+| **EXPLORE** | Read, search, ask questions, map the problem space. Pull in findings and decisions from previous plans. | Read-only. All notes go to the plan directory. |
+| **PLAN** | Design the approach. Identify every artifact to create or modify. Set success criteria. | No changes yet. User must approve before execution. |
+| **EXECUTE** | Implement one step at a time. Commit after each success. | 2 fix attempts max. Revert-first on failure. Surprises → REFLECT. |
+| **REFLECT** | Compare results against written criteria. Validate findings. | Evidence-based only. Contradicted findings → back to EXPLORE. |
+| **RE-PLAN** | Pivot based on what was learned. Log the decision. | Must explain what failed and why. User approves new direction. |
+| **CLOSE** | Write summary. Audit decision anchors. Merge knowledge to consolidated files. | Verify clean output -- no leftover artifacts. |
 
 ---
 
-## What Makes This Different
+## Why This Works (When Other Approaches Don't)
 
 ### Persistent Memory That Survives Context Rot
 
-Everything important is written to a `plans/` directory on disk. When the context window fills up and earlier messages are compressed or lost, the agent re-reads its own notes. State, decisions, findings, progress -- all on disk, all recoverable, even across sessions.
+The #1 failure mode of AI agents on complex tasks is amnesia. Iterative Planner sidesteps it entirely -- everything important lives on disk.
 
 ```
 plans/
 ├── .current_plan               # → active plan directory name
 ├── FINDINGS.md                 # Consolidated findings across all plans (newest first)
 ├── DECISIONS.md                # Consolidated decisions across all plans (newest first)
-├── LESSONS.md                  # Cross-plan institutional memory (≤200 lines, rewritten on close)
+├── LESSONS.md                  # Cross-plan institutional memory (≤200 lines)
 └── plan_2026-02-14_a3f1b2c9/
-    ├── state.md                # Where am I? What step? What iteration?
+    ├── state.md                # Current state, step, iteration
     ├── plan.md                 # The living plan (rewritten each iteration)
     ├── decisions.md            # Append-only log of every decision and pivot
     ├── findings.md             # Index of discoveries (corrected when wrong)
-    ├── findings/               # Detailed research files (subagents write here)
+    ├── findings/               # Detailed research files
     ├── progress.md             # Done vs remaining
     ├── verification.md         # Verification results per REFLECT cycle
     ├── checkpoints/            # Snapshots before risky changes
     └── summary.md              # Written at close
 ```
 
-### Cross-Plan Knowledge Transfer
+State, decisions, findings, progress -- all recoverable, even if the conversation restarts from scratch.
 
-When a plan is closed, its findings and decisions are merged into consolidated files at the `plans/` root -- `FINDINGS.md` and `DECISIONS.md`. The most recently closed plan appears first, so the freshest context is immediately accessible without reading the entire file.
+### Cross-Plan Intelligence
 
-When a new plan starts, the agent reads these consolidated files during EXPLORE to learn what was discovered and decided in previous plans. Per-plan files are seeded with a cross-plan context reference. This means:
+Plans don't exist in isolation. When a plan closes, its findings and decisions merge into consolidated files at the `plans/` root. The next plan reads them during EXPLORE. This means:
 
-- A migration plan can build on the codebase analysis from a previous debugging plan
-- Failed approaches are visible to future plans -- no repeating the same mistakes
-- Findings that were corrected in one plan carry their corrections forward
+- A migration plan **builds on** the analysis from a previous debugging session
+- A design plan **inherits constraints** discovered during an earlier research plan
+- Failed approaches are **visible to future plans** -- no repeating the same dead ends
+- Corrected findings **carry their corrections forward** automatically
 
 ```markdown
 # Consolidated Findings
-*Cross-plan findings archive. Entries merged from per-plan findings.md on close. Newest first.*
+*Cross-plan findings archive. Newest first.*
 
 ## plan_2026-02-20_b4e2c3d0
 ### Index
@@ -109,45 +112,48 @@ When a new plan starts, the agent reads these consolidated files during EXPLORE 
 - SessionSerializer shared between cookie middleware AND API auth
 ```
 
-### Structured Findings That Accumulate and Self-Correct
+### Self-Correcting Research
 
-Most AI agents treat research as throwaway context -- they read files, form impressions, and start coding. When the context window compresses those early reads, the impressions vanish too.
+Most AI agents treat research as throwaway context. They gather information, form impressions, and start executing. When the context window compresses those early discoveries, the impressions vanish.
 
-Iterative Planner makes research a first-class artifact. During EXPLORE, every discovery is written to a `findings.md` index and detailed `findings/` files with **file paths, line numbers, and execution flow traces**. The agent cannot even transition to PLAN until it has at least 3 indexed findings covering problem scope, affected files, and existing patterns.
+Iterative Planner makes research a **first-class artifact**. Every discovery is written to `findings.md` with **specific references, evidence, and reasoning traces**. The agent can't even transition to PLAN until it has at least 3 indexed findings covering problem scope, affected areas, and existing patterns.
 
-When execution reveals that an earlier finding was wrong, it gets a `[CORRECTED iter-N]` marker -- the original stays for traceability, but the correction is what the agent acts on. Subagents contribute in parallel by writing to `findings/{topic-slug}.md` without collisions.
+When execution proves a finding wrong, it gets a `[CORRECTED iter-N]` marker. The original stays for traceability; the correction is what the agent acts on.
 
-### The Autonomy Leash
+### The Autonomy Leash -- You Stay in Control
 
-When a plan step fails, the agent gets exactly **2 small fix attempts** -- each constrained to reverting, deleting, or a one-line change. If neither works, it **stops completely** and presents the situation to you. No silent rewrites. No runaway fix chains. You stay in control of every pivot.
+When a step fails, the agent gets exactly **2 small fix attempts** -- each constrained to reverting, deleting, or a minimal change. If neither works, it **stops and asks you**. No silent rewrites. No runaway fix chains. No waking up to output you don't recognize.
 
-### Structured Reasoning Frameworks
+### Built-in Reasoning Frameworks
 
-The planner embeds domain-agnostic reasoning tools at each state:
+Each state embeds domain-agnostic thinking tools:
 
-- **Constraint classification** (EXPLORE) -- every constraint is classified as hard (non-negotiable), soft (preferences, negotiable), or ghost (past constraints that no longer apply). Ghost constraints are the hidden opportunity -- finding them unlocks options nobody thought were available.
-- **Problem decomposition** (PLAN) -- a 5-point process: understand the whole first, identify natural boundaries, minimize dependencies between steps, start with the riskiest part, and apply split/merge criteria.
-- **Essential vs accidental complexity** (REFLECT) -- before simplifying, ask: "Is this inherent in the problem, or did we create it?" Essential complexity can only be partitioned. Accidental complexity should be removed.
+- **Constraint classification** (EXPLORE) -- every constraint tagged as *hard* (non-negotiable), *soft* (preferences), or *ghost* (past constraints that no longer apply). Ghost constraints are the hidden opportunity -- finding them unlocks options nobody thought existed.
+- **Problem decomposition** (PLAN) -- understand the whole, identify natural boundaries, minimize step dependencies, start with the riskiest part.
+- **Essential vs accidental complexity** (REFLECT) -- before simplifying, ask: "Is this inherent in the problem, or did we create it?" Essential complexity gets partitioned. Accidental complexity gets removed.
 
 ### Revert-First Complexity Control
 
-The default response to failure is to simplify, never to add. When something breaks:
+The default response to failure is to **simplify, never to add**:
 
 1. Can I fix by **reverting**? Do that.
 2. Can I fix by **deleting**? Do that.
 3. **One-line** fix? Do that.
 4. None of the above? **Stop.** Enter REFLECT.
 
-Additional guardrails:
-- **6 Simplification Checks** -- during REFLECT, the agent runs a structured diagnostic: delete instead? symptom or root cause? essential or accidental complexity? understandable? fighting the framework? worth reverting everything?
-- **10-Line Rule** -- if a "fix" needs more than 10 new lines, it is not a fix. It needs to go through PLAN.
-- **3-Strike Rule** -- same area breaks 3 times? The approach is wrong. Mandatory RE-PLAN with a fundamentally different strategy.
-- **Complexity Budget** -- every plan tracks files added (max 3), new abstractions (max 2), and net line count (target: net-zero or negative).
-- **Nuclear Option** -- at iteration 5, if scope has doubled, recommend full revert. The decision log preserves everything learned for a clean restart.
+Plus hard limits to keep things honest:
+
+| Rule | What it does |
+|------|-------------|
+| **10-Line Rule** | If a "fix" needs more than 10 new lines, it's not a fix -- it needs a plan. |
+| **3-Strike Rule** | Same area breaks 3 times? The approach is wrong. Mandatory RE-PLAN. |
+| **Complexity Budget** | Max 3 new files, max 2 new abstractions, target net-zero or negative line count. |
+| **Nuclear Option** | Iteration 5, scope doubled? Recommend full revert. Decision log preserves all learnings. |
+| **6 Simplification Checks** | Structured diagnostic: delete instead? symptom or root cause? essential or accidental? fighting the framework? worth reverting everything? |
 
 ### Decision Anchoring
 
-When code survives failed alternatives, the agent leaves a `# DECISION D-NNN` comment at the point of impact -- documenting what *not* to do and why. This prevents the next session (or the next developer) from blindly "fixing" a deliberate choice back into a known-broken state.
+When code survives failed alternatives, the agent leaves a `# DECISION D-NNN` comment at the point of impact -- documenting what *not* to do and why. This prevents future sessions (or future developers) from "fixing" a deliberate choice back into a known-broken state.
 
 ```python
 # DECISION D-003: Using stateless tokens instead of dual-write.
@@ -157,29 +163,29 @@ def create_token(user):
     ...
 ```
 
-### Clean Code Hygiene
+### Clean Output Hygiene
 
-Every file change is tracked in a change manifest. Failed steps are reverted immediately -- no half-applied changes, no commented-out experiments, no orphaned imports. The codebase is always in a known-good state before any new plan begins.
+Every change is tracked in a manifest. Failed steps revert immediately -- no half-applied changes, no leftover experiments, no abandoned artifacts. The workspace is always in a known-good state before any new work begins.
 
 ---
 
 ## When to Use This
 
-- Multi-file changes (3+ files)
-- Migrations and refactors
+- Multi-step tasks that touch 3+ files or systems
+- Migrations, refactors, and architectural changes
 - Tasks that have already failed once
-- Cross-system work (2+ systems)
-- Problems with no obvious single solution
+- Complex research or analysis with many moving parts
+- System design and technical decision-making
 - Debugging sessions where the root cause is unclear
+- Any problem where "just do it" leads to a mess
 
 Trigger phrases: *"plan this"*, *"figure out"*, *"help me think through"*, *"I've been struggling with"*, *"debug this complex issue"*
 
 ## When NOT to Use This
 
-- Single-file, obvious fixes
-- Tasks with a well-known, straightforward solution
-- Quick bug fixes where you already know the root cause
-- When you just want to say "do it"
+- Simple, single-step tasks
+- Problems with a well-known, straightforward solution
+- Quick fixes where you already know the answer
 
 ---
 
@@ -196,11 +202,11 @@ node <skill-path>/scripts/bootstrap.mjs close                # Close active plan
 node <skill-path>/scripts/bootstrap.mjs list                 # Show all plan directories
 ```
 
-**`new`** creates the plan directory under `plans/`, writes the pointer file (`plans/.current_plan`), creates consolidated files (`plans/FINDINGS.md`, `plans/DECISIONS.md`) if they don't exist, and drops the agent into EXPLORE. Refuses if an active plan already exists -- use `resume` to continue, `close` to end it, or `new --force` to close and start fresh.
+**`new`** creates the plan directory under `plans/`, writes the pointer file, creates consolidated files if they don't exist, and drops the agent into EXPLORE. Refuses if an active plan already exists -- use `resume` to continue, `close` to end it, or `new --force` to close and start fresh.
 
-**`close`** merges per-plan findings and decisions into the consolidated files (newest first), removes the pointer file, and preserves the plan directory for reference. This is an administrative operation -- the protocol CLOSE state (writing `summary.md`, auditing decision anchors) should be completed by the agent before running `close`.
+**`close`** merges per-plan findings and decisions into the consolidated files (newest first), removes the pointer, and preserves the plan directory for reference.
 
-**`resume`** outputs the current plan state (state, iteration, step, goal, progress, checkpoints, consolidated file paths) for quick re-entry. **`status`** prints a single-line summary. **`list`** shows all plan directories under `plans/` (active and closed) with their state and goal.
+**`resume`** outputs the current plan state for quick re-entry. **`status`** prints a single-line summary. **`list`** shows all plan directories with their state and goal.
 
 ### Git Integration
 
@@ -212,7 +218,7 @@ node <skill-path>/scripts/bootstrap.mjs list                 # Show all plan dir
 | RE-PLAN | Decide: keep successful commits or revert to checkpoint. |
 | CLOSE | Final commit with summary. |
 
-Bootstrap automatically adds `plans/` to `.gitignore` -- preventing plan files from being committed during EXECUTE step commits. Remove this pattern if your team wants decision logs for post-mortems.
+Bootstrap automatically adds `plans/` to `.gitignore`. Remove this if your team wants decision logs for post-mortems.
 
 ---
 
@@ -243,6 +249,7 @@ iterative-planner/
 ├── README.md                 # This file
 ├── CLAUDE.md                 # AI assistant guidance for contributing
 ├── CHANGELOG.md              # Version history
+├── LESSONS.md                # Cross-plan lessons learned from using the planner on itself
 ├── LICENSE                   # GNU GPLv3
 ├── VERSION                   # Single source of truth for version number
 ├── Makefile                  # Unix/Linux/macOS build
