@@ -1400,6 +1400,112 @@ describe("bootstrap.mjs", () => {
       assert.equal(r.exitCode, 0);
       assert.ok(r.stdout.includes("Usage"), "should show usage");
     });
+
+    it("extractSection captures full multi-line content", () => {
+      const dir = getTempDir();
+      run(dir, "new", "extract test");
+      const planDir = getPointer(dir);
+      // Write findings with 5 indexed items
+      writeFileSync(
+        join(dir, "plans", planDir, "findings.md"),
+        "# Findings\n\n## Index\n- Finding A\n- Finding B\n- Finding C\n- Finding D\n- Finding E\n\n## Key Constraints\n- Constraint 1\n"
+      );
+      // Set state to PLAN (triggers findings count check)
+      const statePath = join(dir, "plans", planDir, "state.md");
+      const state = readFileSync(statePath, "utf-8");
+      writeFileSync(statePath, state.replace("# Current State: EXPLORE", "# Current State: PLAN"));
+      const r = runValidate(dir);
+      // Should NOT warn about insufficient findings (5 >= 3)
+      assert.ok(!r.stdout.includes("indexed findings"), "should not warn about findings count when >=3 exist");
+    });
+
+    it("warns when fewer than 3 findings in PLAN state", () => {
+      const dir = getTempDir();
+      run(dir, "new", "low findings test");
+      const planDir = getPointer(dir);
+      writeFileSync(
+        join(dir, "plans", planDir, "findings.md"),
+        "# Findings\n\n## Index\n- Finding A\n- Finding B\n\n## Key Constraints\n- None\n"
+      );
+      const statePath = join(dir, "plans", planDir, "state.md");
+      const state = readFileSync(statePath, "utf-8");
+      writeFileSync(statePath, state.replace("# Current State: EXPLORE", "# Current State: PLAN"));
+      const r = runValidate(dir);
+      assert.ok(r.stdout.includes("Only 2 indexed findings"), "should warn about only 2 findings");
+    });
+
+    it("does not warn about findings in EXPLORE state", () => {
+      const dir = getTempDir();
+      run(dir, "new", "explore findings test");
+      const planDir = getPointer(dir);
+      writeFileSync(
+        join(dir, "plans", planDir, "findings.md"),
+        "# Findings\n\n## Index\n- Finding A\n\n## Key Constraints\n- None\n"
+      );
+      // State is EXPLORE by default — should not warn
+      const r = runValidate(dir);
+      assert.ok(!r.stdout.includes("indexed findings"), "should not warn about findings count in EXPLORE");
+    });
+
+    it("warns about missing summary.md at CLOSE state", () => {
+      const dir = getTempDir();
+      run(dir, "new", "summary check test");
+      const planDir = getPointer(dir);
+      const statePath = join(dir, "plans", planDir, "state.md");
+      writeFileSync(statePath,
+        "# Current State: CLOSE\n## Iteration: 1\n## Current Plan Step: done\n## Last Transition: REFLECT → CLOSE\n## Transition History:\n- INIT → EXPLORE (start)\n- EXPLORE → PLAN (ready)\n- PLAN → EXECUTE (approved)\n- EXECUTE → REFLECT (done)\n- REFLECT → CLOSE (pass)\n"
+      );
+      writeFileSync(join(dir, "plans", planDir, "verification.md"), "# Verification\n");
+      // No summary.md — should warn
+      const r = runValidate(dir);
+      assert.ok(r.stdout.includes("summary.md missing"), "should warn about missing summary.md at CLOSE");
+    });
+
+    it("no summary.md warning when summary exists at CLOSE", () => {
+      const dir = getTempDir();
+      run(dir, "new", "summary present test");
+      const planDir = getPointer(dir);
+      const statePath = join(dir, "plans", planDir, "state.md");
+      writeFileSync(statePath,
+        "# Current State: CLOSE\n## Iteration: 1\n## Current Plan Step: done\n## Last Transition: REFLECT → CLOSE\n## Transition History:\n- INIT → EXPLORE (start)\n- EXPLORE → PLAN (ready)\n- PLAN → EXECUTE (approved)\n- EXECUTE → REFLECT (done)\n- REFLECT → CLOSE (pass)\n"
+      );
+      writeFileSync(join(dir, "plans", planDir, "verification.md"), "# Verification\n");
+      writeFileSync(join(dir, "plans", planDir, "summary.md"), "# Summary\nDone.\n");
+      const r = runValidate(dir);
+      assert.ok(!r.stdout.includes("summary.md missing"), "should not warn when summary.md exists");
+    });
+
+    it("detects iteration/version mismatch", () => {
+      const dir = getTempDir();
+      run(dir, "new", "iter mismatch test");
+      const planDir = getPointer(dir);
+      writeFileSync(
+        join(dir, "plans", planDir, "state.md"),
+        "# Current State: EXECUTE\n## Iteration: 3\n## Current Plan Step: 1\n## Last Transition: PLAN → EXECUTE\n## Transition History:\n- INIT → EXPLORE (start)\n- EXPLORE → PLAN (ready)\n- PLAN → EXECUTE (approved)\n"
+      );
+      writeFileSync(
+        join(dir, "plans", planDir, "plan.md"),
+        "# Plan v1\n\n## Goal\nTest\n\n## Problem Statement\nTest\n\n## Files To Modify\nf.js\n\n## Steps\n1. Do\n\n## Assumptions\nNone\n\n## Failure Modes\nNone\n\n## Pre-Mortem & Falsification Signals\nNone\n\n## Success Criteria\nPass\n\n## Verification Strategy\nRun\n\n## Complexity Budget\n0/3\n"
+      );
+      const r = runValidate(dir);
+      assert.ok(r.stdout.includes("iteration (3) != plan.md version (v1)"), "should warn about iteration/version mismatch");
+    });
+
+    it("extractSection handles last section without trailing heading", () => {
+      const dir = getTempDir();
+      run(dir, "new", "last section test");
+      const planDir = getPointer(dir);
+      // Findings where Index is the last section
+      writeFileSync(
+        join(dir, "plans", planDir, "findings.md"),
+        "# Findings\n\n## Index\n- Finding A\n- Finding B\n- Finding C\n"
+      );
+      const statePath = join(dir, "plans", planDir, "state.md");
+      const state = readFileSync(statePath, "utf-8");
+      writeFileSync(statePath, state.replace("# Current State: EXPLORE", "# Current State: PLAN"));
+      const r = runValidate(dir);
+      assert.ok(!r.stdout.includes("indexed findings"), "should correctly count findings in last section");
+    });
   });
 
   describe("LESSONS.md", () => {

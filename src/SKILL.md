@@ -31,6 +31,7 @@ stateDiagram-v2
     RE_PLAN --> PLAN : new approach ready
     CLOSE --> [*]
 ```
+> Note: Mermaid uses `RE_PLAN` (underscore) because hyphens are not valid in state names. Everywhere else in this document, `RE-PLAN` (hyphen) is used.
 
 | State | Purpose | Allowed Actions |
 |-------|---------|-----------------|
@@ -54,6 +55,8 @@ stateDiagram-v2
 | REFLECT → RE-PLAN | Failure or better approach found. |
 | REFLECT → EXPLORE | Need more context before re-planning. |
 | RE-PLAN → PLAN | New approach formulated. Decision logged. |
+
+> **Bootstrap shortcuts**: `bootstrap.mjs close` allows closing from any state (EXPLORE→CLOSE, PLAN→CLOSE, EXECUTE→CLOSE, RE-PLAN→CLOSE). These are administrative exits — the protocol CLOSE steps (summary.md, decision audit, LESSONS.md update) should be completed by the agent before running `close`.
 
 Every transition → log in `state.md`. RE-PLAN transitions → also log in `decisions.md` (what failed, what learned, why new direction).
 At CLOSE → audit decision anchors (`references/decision-anchoring.md`). Merge per-plan findings/decisions to `plans/FINDINGS.md` and `plans/DECISIONS.md`. Update `plans/LESSONS.md` with significant lessons (rewrite to ≤200 lines). Compress consolidated files if >500 lines (see "Consolidated File Management").

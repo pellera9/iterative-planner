@@ -1,7 +1,7 @@
 # Iterative Planner
 
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Skill](https://img.shields.io/badge/Skill-v2.7.2-green.svg)](CHANGELOG.md)
+[![Skill](https://img.shields.io/badge/Skill-v2.8.0-green.svg)](CHANGELOG.md)
 [![Sponsored by Electi](https://img.shields.io/badge/Sponsored%20by-Electi-red.svg)](https://www.electiconsulting.com)
 
 **Complex tasks break AI agents. This skill fixes that.**
@@ -53,6 +53,7 @@ stateDiagram-v2
     RE_PLAN --> PLAN : revised approach
     CLOSE --> [*]
 ```
+> Note: Mermaid uses `RE_PLAN` (underscore) because hyphens are not valid in state names. Everywhere else, `RE-PLAN` (hyphen) is used.
 
 | State | What happens | Guardrails |
 |-------|-------------|------------|

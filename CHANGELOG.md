@@ -4,6 +4,16 @@ All notable changes to the Iterative Planner project will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.8.0] - 2026-03-06
+
+### Fixed
+- **extractSection() only captured first line** — regex `([\\s\\S]*?)(?=\\n## |$)` with multiline flag caused `$` to match end-of-line, making lazy quantifier stop after first line. Replaced with indexOf-based approach. This broke the findings count gate (≥3 before PLAN) — `checkFindings()` always reported ≤1 finding regardless of actual count.
+
+### Added
+- **Bootstrap transition shortcuts documented** — SKILL.md Transitions section now documents that `bootstrap close` allows any-state→CLOSE (EXPLORE→CLOSE, PLAN→CLOSE, EXECUTE→CLOSE, RE-PLAN→CLOSE).
+- **Mermaid naming convention note** — SKILL.md and README.md now explain that `RE_PLAN` (underscore) in mermaid diagrams = `RE-PLAN` (hyphen) in prose, due to mermaid syntax limitation.
+- **7 new validator tests** — extractSection multi-line capture, findings count thresholds (0/2/3/5), summary.md at CLOSE, iteration/version mismatch, last-section edge case. 97 tests total (was 90).
+
 ## [2.7.2] - 2026-03-06
 
 ### Fixed

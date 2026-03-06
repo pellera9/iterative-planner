@@ -86,9 +86,13 @@ function isPlaceholder(text) {
 function extractSection(content, heading) {
   if (!content) return null;
   const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const re = new RegExp(`^## ${escaped}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`, "m");
-  const match = content.match(re);
-  return match ? match[1].trim() : null;
+  const headingRe = new RegExp(`^## ${escaped}[ \\t]*$`, "m");
+  const headingMatch = headingRe.exec(content);
+  if (!headingMatch) return null;
+  const start = headingMatch.index + headingMatch[0].length;
+  const nextHeading = content.indexOf("\n## ", start);
+  const body = nextHeading >= 0 ? content.slice(start, nextHeading) : content.slice(start);
+  return body.trim() || null;
 }
 
 // ---------------------------------------------------------------------------
