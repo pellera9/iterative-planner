@@ -236,7 +236,8 @@ function appendToIndex(planDirName) {
     }
   }
 
-  const row = `| ${planDirName} | ${date} | ${goalOneLine} | ${topics} |\n`;
+  const safeGoal = goalOneLine.replace(/\|/g, "\\|");
+  const row = `| ${planDirName} | ${date} | ${safeGoal} | ${topics} |\n`;
   const updated = existing.trimEnd() + "\n" + row;
   writeFileSync(indexPath + ".tmp", updated);
   renameSync(indexPath + ".tmp", indexPath);
@@ -419,6 +420,11 @@ ${crossPlanNote}
 
 ## Additional Checks
 *Optional: lint, type checks, behavioral diffs, smoke tests.*
+
+## Not Verified
+| What | Why |
+|------|-----|
+| *To be populated during REFLECT* | - |
 
 ## Prediction Accuracy
 *Compare plan.md predictions against actual results during REFLECT.*

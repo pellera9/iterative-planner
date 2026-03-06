@@ -1094,6 +1094,7 @@ describe("bootstrap.mjs", () => {
       assert.ok(v.includes("Result"), "should have result column header");
       assert.ok(v.includes("Evidence"), "should have evidence column header");
       assert.ok(v.includes("## Additional Checks"), "should have additional checks section");
+      assert.ok(v.includes("## Not Verified"), "should have not verified section");
       assert.ok(v.includes("## Verdict"), "should have verdict section");
     });
 
@@ -1311,6 +1312,21 @@ describe("bootstrap.mjs", () => {
       const content = readFileSync(join(dir, "plans", "INDEX.md"), "utf-8");
       assert.ok(content.includes("auth system"), "should extract topic from findings link");
     });
+
+    it("pipe character in goal is escaped in INDEX.md table", () => {
+      const dir = getTempDir();
+      run(dir, "new", "Fix auth | pipe test");
+      const planDir = getPointer(dir);
+      run(dir, "close");
+      const content = readFileSync(join(dir, "plans", "INDEX.md"), "utf-8");
+      // Should have escaped pipe so it doesn't break the table
+      assert.ok(content.includes("\\|"), "pipe in goal should be escaped");
+      // Count columns in the data row (should be exactly 4 data columns)
+      const dataRows = content.split("\n").filter((l) => l.includes(planDir));
+      assert.equal(dataRows.length, 1, "should have exactly one row for the plan");
+      const cols = dataRows[0].split("|").filter((c) => c.trim()).length;
+      assert.equal(cols, 4, "row should have exactly 4 columns despite pipe in goal");
+    });
   });
 
   describe("lessons_snapshot.md", () => {
@@ -1504,6 +1520,21 @@ describe("bootstrap.mjs", () => {
       writeFileSync(statePath, state.replace("# Current State: EXPLORE", "# Current State: PLAN"));
       const r = runValidate(dir);
       assert.ok(!r.stdout.includes("indexed findings"), "should correctly count findings in last section");
+    });
+
+    it("counts numbered-list findings correctly", () => {
+      const dir = getTempDir();
+      run(dir, "new", "numbered findings test");
+      const planDir = getPointer(dir);
+      writeFileSync(
+        join(dir, "plans", planDir, "findings.md"),
+        "# Findings\n\n## Index\n1. Auth module uses JWT\n2. Session store in Redis\n3. Token expiry is 24h\n"
+      );
+      const statePath = join(dir, "plans", planDir, "state.md");
+      const state = readFileSync(statePath, "utf-8");
+      writeFileSync(statePath, state.replace("# Current State: EXPLORE", "# Current State: PLAN"));
+      const r = runValidate(dir);
+      assert.ok(!r.stdout.includes("indexed findings"), "should count numbered-list findings without warning");
     });
   });
 

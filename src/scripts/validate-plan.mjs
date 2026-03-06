@@ -177,7 +177,8 @@ function checkFindings(planDir, issues) {
   if (indexSection) {
     const findingLinks = indexSection.split("\n").filter((l) => l.match(/^- \[/));
     const findingItems = indexSection.split("\n").filter((l) => l.match(/^- .+/));
-    const count = Math.max(findingLinks.length, findingItems.length);
+    const numberedItems = indexSection.split("\n").filter((l) => l.match(/^\d+\.\s+.+/));
+    const count = Math.max(findingLinks.length, findingItems.length, numberedItems.length);
 
     if (count < 3 && !["EXPLORE", "CLOSE"].includes(currentState.toUpperCase())) {
       issues.push({ severity: "WARN", check: "findings", message: `Only ${count} indexed findings (minimum 3 required before PLAN)` });
