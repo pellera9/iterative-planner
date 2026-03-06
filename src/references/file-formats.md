@@ -286,6 +286,12 @@ Written during PLAN (initial template with criteria), updated during EXECUTE (pe
 | Behavioral diff | diff /api/auth/validate response | EXPECTED DIFF | Token field added (intentional) |
 | Smoke test | POST /login with test credential | PASS | 200 + valid JWT returned |
 
+## Not Verified
+| What | Why |
+|------|-----|
+| Clock skew handling in token validation | No multi-node test environment available |
+| Concurrent session limits | Out of scope for this iteration |
+
 ## Prediction Accuracy
 | Predicted (from plan.md) | Actual | Delta |
 |--------------------------|--------|-------|
@@ -303,6 +309,8 @@ Written during PLAN (initial template with criteria), updated during EXECUTE (pe
 **Criteria Verification table** is mandatory — one row per success criterion from `plan.md`. **Result** must be PASS or FAIL. **Evidence** must be concrete (counts, output excerpts, log references) — not "looks good" or "seems to work".
 
 **Additional Checks** is optional — for lint, type checks, behavioral diffs, smoke tests, or other verification not directly tied to a success criterion.
+
+**Not Verified** is mandatory — list what you didn't test and why (no coverage, out of scope, untestable, no environment). Forces honesty about coverage gaps. Even if empty, write "None — all criteria have automated verification."
 
 **Verdict** is mandatory — count of pass/fail, blockers, and recommended transition.
 

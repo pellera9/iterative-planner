@@ -250,9 +250,13 @@ On **failed step**: skip gate. Follow Autonomy Leash (revert-first, 2 attempts m
 - Cross-validate: every `[x]` in plan.md must be "Completed" in progress.md. Fix drift first.
 - **Run verification** — execute each check defined in the Verification Strategy. Read `verification.md`, then record results: criterion, method, command/action, result (PASS/FAIL), evidence (output summary or log reference). See `references/file-formats.md` for template.
 - **Prediction accuracy** — compare plan.md predictions against actual results: step count, file count, line delta, iteration count. Record in `verification.md` Prediction Accuracy table. Feed significant patterns into `plans/LESSONS.md` at CLOSE. See `references/planning-rigor.md`.
+- **Criteria adequacy** — before running verification, ask: do these criteria test what matters, or what was easy to test? Note gaps in `verification.md` Not Verified section.
+- **Not-verified list** — in `verification.md`, write a "Not Verified" section: what you didn't test and why (no coverage, out of scope, untestable). Absence of evidence is not evidence of absence.
+- **Devil's advocate** — before routing to CLOSE: name one reason this might still be wrong despite passing verification. If you can't think of one, be more suspicious, not less. Record in `decisions.md`.
 - Read `decisions.md` — check 3-strike patterns.
 - Compare against **written criteria**, not memory. Run 6 Simplification Checks (`references/complexity-control.md`).
 - Write `decisions.md` (what happened, learned, root cause) + `progress.md` + `state.md`.
+- **Adversarial review (iteration ≥ 2)** — spawn a Task subagent with `verification.md`, `plan.md` (criteria), and `decisions.md`. Its job: are criteria adequate? what wasn't tested? does evidence support CLOSE? Main agent must address each concern in `decisions.md` before routing to CLOSE.
 
 | Condition | → Transition |
 |-----------|--------------|

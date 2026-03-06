@@ -108,7 +108,7 @@ Rough guideline for effort distribution. Not hard rules — adjust per task comp
 | EXPLORE | 20-30% | >40% → over-exploring or task needs decomposition |
 | PLAN | 10-15% | >25% → can't converge → go back to EXPLORE |
 | EXECUTE | 40-50% | >60% → likely under-explored |
-| REFLECT | 5-10% | <5% → skimming verification |
+| REFLECT | 5-10% | <5% → skimming verification. If routing CLOSE after <5% REFLECT, explain in `decisions.md` why verification was trivial. |
 | RE-PLAN | 5-10% | >15% → churning, consider decomposition |
 
 If EXECUTE consistently dominates (>60%), the pattern is: not enough exploration upfront → discoveries during execution → surprise pivots. Invest more in EXPLORE.
