@@ -4,6 +4,15 @@ All notable changes to the Iterative Planner project will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.9.0] - 2026-03-06
+
+### Fixed
+- **stripHeader H1 injection** — `stripHeader()` in bootstrap.mjs could inject a stale H1 heading into consolidated files. Fixed heading removal logic.
+- **verification.md template** — corrected the verification.md bootstrap template formatting.
+- **INDEX.md pipe escaping** — pipe characters in INDEX.md table entries are now properly escaped to prevent broken markdown tables.
+- **Validator numbered findings** — `validate-plan.mjs` now correctly parses numbered findings lists instead of only bullet-style findings.
+- **Test counts and README project tree updated** — CLAUDE.md and README.md now reflect accurate test count and project structure.
+
 ## [2.8.0] - 2026-03-06
 
 ### Fixed
