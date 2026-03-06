@@ -654,15 +654,25 @@ describe("bootstrap.mjs", () => {
       assert.ok(activeLine.includes("Plan B"), "active plan should be Plan B");
     });
 
-    it("orphan warning when directories exist but no pointer", () => {
+    it("orphan warning when pointer file exists but points to non-existent dir", () => {
       const dir = getTempDir();
       run(dir, "new", "Orphan test");
-      // Manually remove pointer to simulate crash
-      rmSync(join(dir, "plans", ".current_plan"));
+      // Overwrite pointer to point to non-existent directory (simulates crash)
+      writeFileSync(join(dir, "plans", ".current_plan"), "plan_1999-01-01_deadbeef");
       // Now create a new plan — should warn about orphan (use runFull to capture stderr on success)
       const r = runFull(dir, "new", "New after orphan");
       assert.equal(r.exitCode, 0);
       assert.ok(r.stderr.includes("WARNING"), "should warn about orphaned directories");
+    });
+
+    it("no orphan warning when pointer file is absent (normal close)", () => {
+      const dir = getTempDir();
+      run(dir, "new", "Closed plan");
+      run(dir, "close");
+      // Pointer removed by close — this is normal, not an orphan
+      const r = runFull(dir, "new", "New after close");
+      assert.equal(r.exitCode, 0);
+      assert.ok(!r.stderr.includes("WARNING"), "should not warn after normal close");
     });
 
     it("status and resume report iteration and step from modified state.md", () => {

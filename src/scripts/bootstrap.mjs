@@ -259,17 +259,20 @@ function snapshotLessons(planDirName) {
 function cmdNew(goal, force) {
   mkdirSync(plansDir, { recursive: true });
 
-  // Warn about orphaned plan directories (no pointer, but directories exist)
+  // Warn about orphaned plan directories (pointer file exists but is corrupted/stale)
   try {
     const activeName = readPointer();
-    const allPlans = readdirSync(plansDir, { withFileTypes: true })
-      .filter((d) => d.isDirectory() && d.name.startsWith("plan_"))
-      .map((d) => d.name);
-    const orphans = allPlans.filter((name) => name !== activeName);
-    if (orphans.length > 0 && !activeName) {
-      console.error(`WARNING: Found ${orphans.length} plan director${orphans.length === 1 ? "y" : "ies"} with no active pointer:`);
-      for (const o of orphans) console.error(`  plans/${o}`);
-      console.error(`  These may be from a previous crash. Use 'list' to inspect.`);
+    let pointerFileExists = false;
+    try { readFileSync(pointerFile, "utf-8"); pointerFileExists = true; } catch { /* no pointer file */ }
+    if (!activeName && pointerFileExists) {
+      const allPlans = readdirSync(plansDir, { withFileTypes: true })
+        .filter((d) => d.isDirectory() && d.name.startsWith("plan_"))
+        .map((d) => d.name);
+      if (allPlans.length > 0) {
+        console.error(`WARNING: Pointer file exists but points to non-existent directory. Found ${allPlans.length} plan director${allPlans.length === 1 ? "y" : "ies"}:`);
+        for (const o of allPlans) console.error(`  plans/${o}`);
+        console.error(`  These may be from a previous crash. Use 'list' to inspect.`);
+      }
     }
   } catch { /* plans/ may be empty or not scannable */ }
 
@@ -530,6 +533,7 @@ function cmdResume() {
   console.log(`    decisions.md → plans/${planDirName}/decisions.md`);
   console.log(`    progress.md  → plans/${planDirName}/progress.md`);
   console.log(`    findings.md  → plans/${planDirName}/findings.md`);
+  console.log(`    verification.md → plans/${planDirName}/verification.md`);
   console.log();
   console.log(`  Consolidated context:`);
   console.log(`    plans/FINDINGS.md  — cross-plan findings archive`);

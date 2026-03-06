@@ -119,7 +119,7 @@ function checkStateTransitions(planDir, issues) {
 
   for (const line of lines) {
     // Format: "- STATE1 → STATE2 (reason)" — arrow can be → or ->
-    const match = line.match(/^- (.+?)\s*[→\->]+\s*(\S+)/);
+    const match = line.match(/^- (.+?)\s+(?:→|->)\s+(\S+)/);
     if (!match) continue;
 
     const from = match[1].trim().replace(/-/g, "-").toUpperCase();
@@ -204,6 +204,13 @@ function checkCrossFileConsistency(planDir, issues) {
     const verification = readFile(join(planDir, "verification.md"));
     if (!verification) {
       issues.push({ severity: "ERROR", check: "consistency", message: "verification.md missing during REFLECT/CLOSE" });
+    }
+  }
+
+  // Check that summary.md exists at CLOSE
+  if (currentState.toUpperCase() === "CLOSE") {
+    if (!existsSync(join(planDir, "summary.md"))) {
+      issues.push({ severity: "WARN", check: "consistency", message: "summary.md missing during CLOSE" });
     }
   }
 

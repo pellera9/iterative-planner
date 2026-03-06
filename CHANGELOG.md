@@ -4,6 +4,15 @@ All notable changes to the Iterative Planner project will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.7.2] - 2026-03-06
+
+### Fixed
+- **CRITICAL: Validator regex mis-parsed RE-PLAN transitions** — `validate-plan.mjs` line 122 regex `[→\->]` char class included literal `-`, causing `RE-PLAN → PLAN` to be split as `RE` + `-` (arrow) + `PLAN` and flagged as invalid. Fixed with `\s+(?:→|->)\s+`.
+- **Orphan warning false positive** — `bootstrap.mjs new` warned about "orphaned directories from a previous crash" whenever closed plans existed without an active pointer (normal state after `close`). Now only warns when pointer file exists but points to a non-existent directory.
+- **Validator missing summary.md check** — added WARN-level check for `summary.md` existence when plan state is CLOSE.
+- **Resume missing verification.md** — `bootstrap.mjs resume` now lists `verification.md` in recovery files output.
+- Updated orphan warning test to simulate corrupted pointer (correct scenario) + added test for no false warning after normal close. 90 tests total.
+
 ## [2.7.1] - 2026-03-06
 
 ### Changed
