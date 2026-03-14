@@ -4,7 +4,7 @@ Guidance for working with the Iterative Planner codebase.
 
 ## Project Purpose
 
-Claude Code skill — state-machine driven iterative planning and execution. Cycle: Explore → Plan → Execute → Reflect → Replan. Filesystem (`plans/plan_YYYY-MM-DD_XXXXXXXX/`) as persistent memory.
+Claude Code skill — state-machine driven iterative planning and execution. Cycle: Explore → Plan → Execute → Reflect → Pivot. Filesystem (`plans/plan_YYYY-MM-DD_XXXXXXXX/`) as persistent memory.
 
 Use cases: multi-file tasks, migrations, refactoring, failed tasks, debugging, anything 3+ files or 2+ systems.
 
@@ -65,7 +65,7 @@ Complete spec in **src/SKILL.md**. Key sections:
 - **Complexity Control**: src/SKILL.md "Complexity Control" section + `src/references/complexity-control.md` (6 Simplification Checks including essential vs accidental complexity)
 - **Code Hygiene**: src/SKILL.md "Code Hygiene" section + `src/references/code-hygiene.md`
 - **Decision Anchoring**: src/SKILL.md "Decision Anchoring" section + `src/references/decision-anchoring.md`
-- **Planning Rigor**: src/SKILL.md PLAN/EXPLORE/REFLECT/REPLAN sections + `src/references/planning-rigor.md` (assumptions, pre-mortem, falsification signals, exploration confidence, prediction accuracy, ghost constraints, decomposition)
+- **Planning Rigor**: src/SKILL.md PLAN/EXPLORE/REFLECT/PIVOT sections + `src/references/planning-rigor.md` (assumptions, pre-mortem, falsification signals, exploration confidence, prediction accuracy, ghost constraints, decomposition)
 - **Git Integration**: src/SKILL.md "Git Integration" section
 
 Do not duplicate protocol content here. Read src/SKILL.md directly.
@@ -134,7 +134,7 @@ make help                    # Show available targets
 - [ ] Plan directory structure in src/SKILL.md matches bootstrap.mjs output (including `verification.md`)
 - [ ] `src/scripts/bootstrap.mjs` creates and references `FINDINGS.md`, `DECISIONS.md`, and `LESSONS.md` consolidated files
 - [ ] Consolidated files contain merged content after `close`
-- [ ] `plans/LESSONS.md` referenced in SKILL.md (EXPLORE, PLAN gate check, REPLAN, CLOSE, Recovery)
+- [ ] `plans/LESSONS.md` referenced in SKILL.md (EXPLORE, PLAN gate check, PIVOT, CLOSE, Recovery)
 - [ ] `plans/INDEX.md` created by bootstrap and updated on close
 - [ ] `lessons_snapshot.md` created in plan directory on close
 - [ ] `src/scripts/validate-plan.mjs` passes syntax check

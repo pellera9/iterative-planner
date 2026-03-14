@@ -19,7 +19,7 @@ Plans depend on assumptions discovered during EXPLORE. Make them explicit so whe
 - Bullet list, not a table. Each: what you assume, where it's grounded, which steps depend on it.
 - Add "Falsified if..." when the falsification condition is non-obvious.
 - On surprise discovery during EXECUTE: check Assumptions first. If a listed assumption is falsified, you know which steps to re-evaluate.
-- On REPLAN: review assumptions — were any wrong? Update findings with corrections.
+- On PIVOT: review assumptions — were any wrong? Update findings with corrections.
 
 **Common assumption categories**:
 
@@ -114,11 +114,11 @@ Track how well the plan predicted reality. Builds institutional memory about sys
 | Optimism on dependencies | External dependencies assumed to be reliable | Add buffer for every external dependency |
 | Complexity discount | "It's straightforward" → it wasn't | If you catch yourself saying "simple," add a risk entry |
 
-## Ghost Constraint Hunting (REPLAN)
+## Ghost Constraint Hunting (PIVOT)
 
 Ghost constraints = past constraints baked into the current approach that no longer apply. They're the most common source of unnecessarily constrained solution spaces.
 
-**Active scan during REPLAN** — before designing a new approach, ask:
+**Active scan during PIVOT** — before designing a new approach, ask:
 
 1. **Is the constraint that led to the failed approach still valid?** Example: "We assumed we couldn't change the vendor because of a contract — but the contract was renegotiated last quarter."
 2. **Are we inheriting environmental constraints that are actually preferences?** Example: "Everyone uses tool X, so we assumed we must use tool X — but the actual requirement is 'reliable data processing,' not a specific tool."
@@ -142,7 +142,7 @@ Rough guideline for effort distribution. Not hard rules — adjust per task comp
 | PLAN | 10-15% | >25% → can't converge → go back to EXPLORE |
 | EXECUTE | 40-50% | >60% → likely under-explored |
 | REFLECT | 5-10% | <5% → skimming verification. If routing CLOSE after <5% REFLECT, explain in `decisions.md` why verification was trivial. |
-| REPLAN | 5-10% | >15% → churning, consider decomposition |
+| PIVOT | 5-10% | >15% → churning, consider decomposition |
 
 If EXECUTE consistently dominates (>60%), the pattern is: not enough exploration upfront → discoveries during execution → surprise pivots. Invest more in EXPLORE.
 

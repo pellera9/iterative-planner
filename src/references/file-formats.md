@@ -27,14 +27,14 @@ Single source of truth for "where am I?"
 - EXPLORE → PLAN (gathered enough context on auth system)
 - PLAN → EXECUTE (user approved approach A)
 - EXECUTE → REFLECT (tests failing on edge case)
-- REFLECT → REPLAN (approach A can't handle concurrent sessions)
-- REPLAN → PLAN (switching to approach B: token-based)
+- REFLECT → PIVOT (approach A can't handle concurrent sessions)
+- PIVOT → PLAN (switching to approach B: token-based)
 - PLAN → EXECUTE (user approved revised plan)
 ```
 
 Update on every state transition.
 
-**Fix Attempts**: tracks autonomous fixes on current step. After 2 fails → STOP. Resets on: user direction, new step, REPLAN. Leash hit example:
+**Fix Attempts**: tracks autonomous fixes on current step. After 2 fails → STOP. Resets on: user direction, new step, PIVOT. Leash hit example:
 
 ```markdown
 ## Fix Attempts (resets per plan step)
@@ -43,7 +43,7 @@ Update on every state transition.
 - Step 2: LEASH HIT. Transitioned to REFLECT. Waiting for user direction.
 ```
 
-**Change Manifest**: `[x]` = committed, `[ ]` = uncommitted. On failed step / REPLAN → revert uncommitted. See `code-hygiene.md`.
+**Change Manifest**: `[x]` = committed, `[ ]` = uncommitted. On failed step / PIVOT → revert uncommitted. See `code-hygiene.md`.
 
 ## plan.md
 
@@ -145,7 +145,7 @@ Every entry must include a **Trade-off** line: "X **at the cost of** Y".
 **Trade-off**: Fastest path to 80% coverage **at the cost of** ignoring DB/in-memory stores and risking format coupling issues
 **Reasoning**: Redis sessions are 80% of traffic, smallest blast radius
 
-## D-002 | REFLECT → REPLAN | 2025-01-15
+## D-002 | REFLECT → PIVOT | 2025-01-15
 **Context**: Approach A fails — Redis session format is coupled to cookie serializer
 **What Failed**: Cannot deserialize existing sessions with new token format
 **What Was Learned**: Session format tied to entire serialization pipeline in `lib/session/serializer.rb`
@@ -159,7 +159,7 @@ Every entry must include a **Trade-off** line: "X **at the cost of** Y".
 **Trade-off**: Safe rollback and format decoupling **at the cost of** doubled storage for TTL duration
 **Reasoning**: Decouples new format from legacy, allows rollback
 
-## D-003 | REFLECT → REPLAN | 2025-01-15
+## D-003 | REFLECT → PIVOT | 2025-01-15
 **Context**: Approach B works but dual-write doubles Redis memory usage
 **What Failed**: Memory spike in staging from 2GB to 4.1GB
 **What Was Learned**: Session TTLs are 30 days, so dual-write accumulates fast
@@ -174,11 +174,11 @@ Every entry must include a **Trade-off** line: "X **at the cost of** Y".
 **Reasoning**: Tokens are stateless, eliminates Redis growth problem entirely
 ```
 
-Complexity Assessment mandatory for all REPLAN entries.
+Complexity Assessment mandatory for all PIVOT entries.
 
 ## findings.md
 
-Updated during EXPLORE. Corrected during REPLAN when earlier findings prove wrong. Always include **file paths with line numbers** and **code path traces**.
+Updated during EXPLORE. Corrected during PIVOT when earlier findings prove wrong. Always include **file paths with line numbers** and **code path traces**.
 
 `findings.md` = summary + index. Detailed findings → `findings/` as individual files. **Main agent** owns the index — subagents write to `findings/` only.
 
@@ -241,7 +241,7 @@ authenticate! → SessionStore#find (line 45) → RedisStore#get (line 12) → R
 
 ## progress.md
 
-Flat checklist. Updated in: PLAN (populate Remaining), EXECUTE (move items), REFLECT (mark failed/blocked), REPLAN (annotate pivot).
+Flat checklist. Updated in: PLAN (populate Remaining), EXECUTE (move items), REFLECT (mark failed/blocked), PIVOT (annotate pivot).
 
 ```markdown
 # Progress
@@ -444,7 +444,7 @@ Created automatically by bootstrap on first `new`. Updated on each `close`.
 **Decision**: Start with approach A (in-place migration)
 **Trade-off**: Fastest path **at the cost of** ignoring DB/in-memory stores
 
-### D-002 | REFLECT → REPLAN | 2025-01-15
+### D-002 | REFLECT → PIVOT | 2025-01-15
 **Context**: Approach A fails — format coupling
 **Decision**: Switch to approach B (dual-write)
 **Trade-off**: Safe rollback **at the cost of** doubled storage
@@ -508,7 +508,7 @@ Cross-plan institutional memory. **Rewritten** (not appended) at CLOSE to stay �
 ```
 
 Usage:
-- Read at start of EXPLORE, before PLAN gate check, and before REPLAN
+- Read at start of EXPLORE, before PLAN gate check, and before PIVOT
 - At CLOSE: read current file, integrate significant lessons from this plan, rewrite entire file ≤200 lines
 - Consolidate aggressively — merge related lessons, drop low-value or stale entries
 - Focus on: recurring patterns, failed approaches, successful strategies, codebase gotchas

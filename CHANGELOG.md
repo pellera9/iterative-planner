@@ -4,6 +4,11 @@ All notable changes to the Iterative Planner project will be documented in this 
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.10.0] - 2026-03-14
+
+### Changed
+- **Rename REPLAN state to PIVOT** — the REPLAN state is now called PIVOT across the entire codebase. PIVOT better describes the state's function: diagnosing failure, choosing a new strategic direction, and justifying the change. Updated state machine diagram, transition rules, file lifecycle matrix, per-state rules, git integration, user interaction, all reference files, validator, build scripts, README, and CLAUDE.md. Validator maintains backward compatibility by normalizing old `REPLAN`/`RE-PLAN`/`RE_PLAN` entries in existing plan files to `PIVOT`.
+
 ## [2.9.2] - 2026-03-14
 
 ### Changed
@@ -32,14 +37,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **extractSection() only captured first line** — regex `([\\s\\S]*?)(?=\\n## |$)` with multiline flag caused `$` to match end-of-line, making lazy quantifier stop after first line. Replaced with indexOf-based approach. This broke the findings count gate (≥3 before PLAN) — `checkFindings()` always reported ≤1 finding regardless of actual count.
 
 ### Added
-- **Bootstrap transition shortcuts documented** — SKILL.md Transitions section now documents that `bootstrap close` allows any-state→CLOSE (EXPLORE→CLOSE, PLAN→CLOSE, EXECUTE→CLOSE, REPLAN→CLOSE).
-- **Mermaid naming convention note** — SKILL.md and README.md added note about `RE_PLAN` vs `RE-PLAN` naming (later removed in v2.9.2 when all variants were normalized to `REPLAN`).
+- **Bootstrap transition shortcuts documented** — SKILL.md Transitions section now documents that `bootstrap close` allows any-state→CLOSE (EXPLORE→CLOSE, PLAN→CLOSE, EXECUTE→CLOSE, PIVOT→CLOSE).
+- **Mermaid naming convention note** — SKILL.md and README.md added note about `RE_PLAN` vs `RE-PLAN` naming (later removed in v2.9.2 when all variants were normalized to `REPLAN`, then renamed to `PIVOT` in v2.10.0).
 - **7 new validator tests** — extractSection multi-line capture, findings count thresholds (0/2/3/5), summary.md at CLOSE, iteration/version mismatch, last-section edge case. 97 tests total (was 90).
 
 ## [2.7.2] - 2026-03-06
 
 ### Fixed
-- **CRITICAL: Validator regex mis-parsed REPLAN transitions** — `validate-plan.mjs` line 122 regex `[→\->]` char class included literal `-`, causing `REPLAN → PLAN` to be split as `RE` + `-` (arrow) + `PLAN` and flagged as invalid. Fixed with `\s+(?:→|->)\s+`.
+- **CRITICAL: Validator regex mis-parsed PIVOT transitions** — `validate-plan.mjs` line 122 regex `[→\->]` char class included literal `-`, causing `PIVOT → PLAN` to be split as `RE` + `-` (arrow) + `PLAN` and flagged as invalid. Fixed with `\s+(?:→|->)\s+`.
 - **Orphan warning false positive** — `bootstrap.mjs new` warned about "orphaned directories from a previous crash" whenever closed plans existed without an active pointer (normal state after `close`). Now only warns when pointer file exists but points to a non-existent directory.
 - **Validator missing summary.md check** — added WARN-level check for `summary.md` existence when plan state is CLOSE.
 - **Resume missing verification.md** — `bootstrap.mjs resume` now lists `verification.md` in recovery files output.
@@ -84,7 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Pre-Mortem & Falsification Signals in plan.md** — mandatory section combining "assume the plan failed, why?" with concrete STOP IF triggers checked during EXECUTE. Covers approach validity (distinct from Failure Modes which cover dependencies). Template added to bootstrap and file-formats.
 - **Exploration Confidence gate** — quality check before EXPLORE → PLAN transition: problem scope, solution space, risk visibility must each be at least "adequate." Recorded in state.md transition log, not as a separate file section.
 - **Prediction Accuracy in verification.md** — during REFLECT, compare plan.md predictions (step count, file count, line delta) against actuals. Builds calibration data for LESSONS.md. Template added to bootstrap and file-formats.
-- **Ghost constraint scan in REPLAN** — before designing a new approach, actively check if the constraint that led to the failed approach is still valid. 3-question checklist in SKILL.md, detailed guidance in planning-rigor.md.
+- **Ghost constraint scan in PIVOT** — before designing a new approach, actively check if the constraint that led to the failed approach is still valid. 3-question checklist in SKILL.md, detailed guidance in planning-rigor.md.
 - **Decomposition analysis at iteration 5** — mandatory analysis in decisions.md identifying 2-3 independent sub-goals before the iteration 6 hard stop. Gives users actionable next steps.
 - **Step risk/dependency annotations** — `[RISK: low/medium/high]` and `[deps: N,M]` recommended on each plan step. Enforces risk-first ordering and reveals parallelization opportunities.
 - **Phase balance heuristic** — rough effort distribution guideline (EXPLORE 20-30%, EXECUTE 40-50%, etc.) with warning signs for imbalance.
@@ -113,7 +118,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [2.2.0] - 2026-03-02
 
 ### Added
-- **Cross-plan institutional memory (`plans/LESSONS.md`)** — new consolidated file for capturing user corrections, recurring mistakes, and workflow preferences across plans. Bootstrap creates it on first `new`. Referenced in SKILL.md at 5 protocol points: EXPLORE (read at start), PLAN gate check, REPLAN (review before pivot), CLOSE (merge lessons learned), and Recovery. 9 new tests added (73 total).
+- **Cross-plan institutional memory (`plans/LESSONS.md`)** — new consolidated file for capturing user corrections, recurring mistakes, and workflow preferences across plans. Bootstrap creates it on first `new`. Referenced in SKILL.md at 5 protocol points: EXPLORE (read at start), PLAN gate check, PIVOT (review before pivot), CLOSE (merge lessons learned), and Recovery. 9 new tests added (73 total).
 
 ### Fixed
 - **README badge updated** — was `v2.1.2`, now matches VERSION.
@@ -139,7 +144,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`.gitignore` cleaned** — removed ~200 lines of Python boilerplate from a non-Python project. Only project-relevant entries remain (build/, dist/, .claude/, plans/, nul).
 - **SKILL.md `close` description corrected** — previously said "removes pointer only"; now accurately describes the full behavior (merge findings/decisions to consolidated files, update state.md, remove pointer).
 - **Revert-First step count aligned** — `complexity-control.md` had 6 steps while SKILL.md had 5. Harmonized to 5.
-- **SKILL.md duplication trimmed** — REPLAN keep-vs-revert decision tree and irreversible operations procedure now summarize and point to `references/code-hygiene.md` instead of duplicating full content.
+- **SKILL.md duplication trimmed** — PIVOT keep-vs-revert decision tree and irreversible operations procedure now summarize and point to `references/code-hygiene.md` instead of duplicating full content.
 - **Iteration 5 / Nuclear Option consolidated** — removed duplicate from "Iteration Limits" section; single definition in "Complexity Control" section.
 - **`build.ps1` default command** — changed from `help` to `package` to match Makefile behavior.
 - **`build.ps1` combined build ordering** — added `Sort-Object Name` for deterministic reference file ordering (Makefile already sorted).
@@ -160,7 +165,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Verification feedback loop** — new `verification.md` per-plan artifact for recording objective verification results during REFLECT. Ensures REFLECT and CLOSE transitions are grounded in evidence (test results, lint output, behavioral diffs, smoke tests) rather than subjective assessment.
 - **Verification Strategy in PLAN** — mandatory section in `plan.md` mapping each success criterion to a test/check method and expected result. Plans with no testable criteria must write "N/A — manual review only" (proves you checked). Documented in SKILL.md PLAN rules and file-formats.md template.
 - **REFLECT verification gate** — REFLECT rules now require running each check from the Verification Strategy and recording results in `verification.md` (criterion, method, command, result PASS/FAIL, evidence). REFLECT → CLOSE transition strengthened from "All success criteria met" to "All criteria verified PASS in `verification.md`".
-- **File Lifecycle Matrix expanded** — added `verification.md` row: W in PLAN (initial template), W in EXECUTE (per-step results), W in REFLECT (full verification pass), R in REPLAN and CLOSE.
+- **File Lifecycle Matrix expanded** — added `verification.md` row: W in PLAN (initial template), W in EXECUTE (per-step results), W in REFLECT (full verification pass), R in PIVOT and CLOSE.
 - **Structured Simplification Checks** — `complexity-control.md` Simplification Checks now have a recording template with blocker flag. If any check reveals a blocker, it must be addressed before CLOSE.
 - **Bootstrap creates verification.md** — `bootstrap.mjs` `new` command creates `verification.md` with initial template (criteria table, additional checks, verdict sections).
 - **Build validation expanded** — Makefile and build.ps1 now validate that `bootstrap.mjs` creates `verification.md`.
@@ -177,7 +182,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Consolidated files in resume output** — `resume` command now shows `plans/FINDINGS.md` and `plans/DECISIONS.md` paths.
 - **EXPLORE reads consolidated files** — EXPLORE rules now include reading consolidated files at start for cross-plan context.
 - **PLAN gate check expanded** — PLAN gate check now includes `plans/FINDINGS.md` and `plans/DECISIONS.md`.
-- **File Lifecycle Matrix expanded** — added `plans/FINDINGS.md` and `plans/DECISIONS.md` rows: R in EXPLORE/PLAN/REPLAN, W(merge) in CLOSE.
+- **File Lifecycle Matrix expanded** — added `plans/FINDINGS.md` and `plans/DECISIONS.md` rows: R in EXPLORE/PLAN/PIVOT, W(merge) in CLOSE.
 - **Recovery protocol expanded** — added step 8 for consolidated cross-plan context files.
 - **Consolidated file templates** — `file-formats.md` now documents `plans/FINDINGS.md` and `plans/DECISIONS.md` formats.
 - **Build script validation** — Makefile and build.ps1 validate that bootstrap.mjs references `FINDINGS.md` and `DECISIONS.md`.
@@ -204,7 +209,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **SKILL.md Mermaid diagram now has initial/terminal state markers** — added `[*] --> EXPLORE` and `CLOSE --> [*]` to match README diagram.
 - **Validation now checks PLAN → PLAN self-transition** — both Makefile and build.ps1 validate all 9 transition table entries (was 8).
 - **Validation now checks checkpoints/ and findings/ directory creation** — bootstrap.mjs directory creation verified by both build scripts.
-- **RE_PLAN/RE-PLAN validation regex tightened** — `RE.PLAN` (matches anything) → `RE[-_]PLAN` (matches only hyphen or underscore). Later normalized to `REPLAN` in v2.9.2.
+- **RE_PLAN/RE-PLAN validation regex tightened** — `RE.PLAN` (matches anything) → `RE[-_]PLAN` (matches only hyphen or underscore). Later normalized to `REPLAN` in v2.9.2, then renamed to `PIVOT` in v2.10.0.
 - **cmdClose TOCTOU race** — `unlinkSync(pointerFile)` wrapped in try/catch to handle concurrent removal.
 - **ensureGitignore now uses atomic write** — temp file + rename, consistent with pointer file write.
 - **Empty goal prevented on backward-compat path** — `node bootstrap.mjs ""` now defaults to "No goal specified".
@@ -251,26 +256,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Checkpoint lifecycle expanded** — File Lifecycle Matrix: REFLECT gains R (read checkpoints to know rollback options before deciding transition)
 - **Checkpoint naming encodes iteration** — `cp-NNN.md` → `cp-NNN-iterN.md` (e.g. `cp-001-iter2.md`). NNN increments globally.
 - **Checkpoint "Git State" clarified** — explicitly documented as the commit BEFORE changes (the restore point), not after
-- **REPLAN keep-vs-revert decision criteria** — keep when steps are valid under new approach + tests pass; revert when fundamentally different approach or commits would conflict; default when unsure = revert to latest checkpoint
-- **REFLECT reads checkpoints** — notes available restore points in `decisions.md` when transitioning to REPLAN
+- **PIVOT keep-vs-revert decision criteria** — keep when steps are valid under new approach + tests pass; revert when fundamentally different approach or commits would conflict; default when unsure = revert to latest checkpoint
+- **REFLECT reads checkpoints** — notes available restore points in `decisions.md` when transitioning to PIVOT
 - **Autonomy leash includes checkpoints** — on leash hit: revert uncommitted first, present available checkpoints to user
 - **3-strike rule specifies rollback** — revert to checkpoint covering the struck area
 - **Nuclear option allows later checkpoint** — default is `cp-000` but user may choose a later checkpoint if partial progress is worth keeping
 - **Recovery protocol includes checkpoints** — `checkpoints/*` now listed as step 7 (rollback points and git hashes)
-- **Git integration REPLAN line expanded** — clarifies keep/revert logic and requires logging choice in `decisions.md`
-- **code-hygiene.md REPLAN section** — added decision criteria, "read checkpoints first", default-to-revert guidance
+- **Git integration PIVOT line expanded** — clarifies keep/revert logic and requires logging choice in `decisions.md`
+- **code-hygiene.md PIVOT section** — added decision criteria, "read checkpoints first", default-to-revert guidance
 - **complexity-control.md** — 3-strike adds checkpoint rollback step; nuclear option clarifies checkpoint selection
 - **file-formats.md checkpoint template** — updated naming, clarified git state semantics, added parenthetical examples for risky change triggers
 
 ## [1.4.0] - 2026-02-17
 
 ### Changed
-- **findings.md lifecycle expanded** — File Lifecycle Matrix updated: REFLECT gains R (read to check contradictions), REPLAN gains R+W (can now correct wrong findings)
+- **findings.md lifecycle expanded** — File Lifecycle Matrix updated: REFLECT gains R (read to check contradictions), PIVOT gains R+W (can now correct wrong findings)
 - **EXPLORE subagent coordination** — main agent owns `findings.md` index; subagents write only to `findings/`. Correction format: `[CORRECTED iter-N]`
 - **PLAN gate check enforced** — "read first" → explicit gate: "If not read → read now. No exceptions."
 - **EXECUTE surprise discovery rule** — unexpected findings noted in `state.md`, step finishes or reverts, then transitions to REFLECT. No silent findings updates during EXECUTE.
 - **REFLECT reads findings** — explicitly reads `findings.md` + `findings/*` to detect contradictions from EXECUTE. EXPLORE transition now triggers on contradicted findings.
-- **REPLAN can correct findings** — if earlier findings proved wrong, update with `[CORRECTED iter-N]` + reason. Append-only (don't delete original text).
+- **PIVOT can correct findings** — if earlier findings proved wrong, update with `[CORRECTED iter-N]` + reason. Append-only (don't delete original text).
 - **file-formats.md updated** — findings.md template adds `## Corrections` section and documents index ownership
 
 ## [1.3.1] - 2026-02-17
@@ -349,7 +354,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - PLAN: Structured approach design with complexity budgets
   - EXECUTE: Step-by-step implementation with change manifests
   - REFLECT: Result evaluation against written success criteria
-  - REPLAN: Evidence-based pivoting with decision logging
+  - PIVOT: Evidence-based pivoting with decision logging
   - CLOSE: Summary writing with decision-anchored comment auditing
 - **State Machine**: Full transition rules with mandatory re-read protocol
 - **Autonomy Leash**: 2-attempt limit per plan step, then STOP and present to user

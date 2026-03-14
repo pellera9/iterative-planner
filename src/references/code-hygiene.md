@@ -30,7 +30,7 @@ Successful steps already committed. Applies only to failed step.
 
 Codebase after failed step = last successful commit. No half-applied changes, no debug code, no commented-out attempts.
 
-## On REPLAN
+## On PIVOT
 
 Read `checkpoints/*` first — know your rollback options. Decide explicitly:
 

@@ -121,7 +121,7 @@ validate:
 	@# Verify transition table entries appear in Mermaid diagram
 	@echo "Checking state machine consistency..."
 	@for pair in "EXPLORE.*PLAN" "PLAN.*EXPLORE" "PLAN.*PLAN" "PLAN.*EXECUTE" "EXECUTE.*REFLECT" \
-		"REFLECT.*CLOSE" "REFLECT.*RE[-_]PLAN" "REFLECT.*EXPLORE" "RE[-_]PLAN.*PLAN"; do \
+		"REFLECT.*CLOSE" "REFLECT.*PIVOT" "REFLECT.*EXPLORE" "PIVOT.*PLAN"; do \
 		grep -qE "$$pair" $(SKILL_FILE) || \
 		(echo "ERROR: Transition $$pair missing from SKILL.md" && exit 1); \
 	done

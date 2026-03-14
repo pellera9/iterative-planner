@@ -166,7 +166,7 @@ function Invoke-Validate {
         $transitions = @(
             @("EXPLORE", "PLAN"), @("PLAN", "EXPLORE"), @("PLAN", "PLAN"),
             @("PLAN", "EXECUTE"), @("EXECUTE", "REFLECT"), @("REFLECT", "CLOSE"),
-            @("REFLECT", "RE[-_]PLAN"), @("REFLECT", "EXPLORE"), @("RE[-_]PLAN", "PLAN")
+            @("REFLECT", "PIVOT"), @("REFLECT", "EXPLORE"), @("PIVOT", "PLAN")
         )
         foreach ($pair in $transitions) {
             $pattern = "$($pair[0]).*$($pair[1])"
