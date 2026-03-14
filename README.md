@@ -1,12 +1,12 @@
 # Iterative Planner
 
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Skill](https://img.shields.io/badge/Skill-v2.9.1-green.svg)](CHANGELOG.md)
+[![Skill](https://img.shields.io/badge/Skill-v2.9.2-green.svg)](CHANGELOG.md)
 [![Sponsored by Electi](https://img.shields.io/badge/Sponsored%20by-Electi-red.svg)](https://www.electiconsulting.com)
 
 **Complex tasks break AI agents. This skill fixes that.**
 
-A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that enforces a rigorous state machine: **Explore → Plan → Execute → Reflect → Re-plan.** The filesystem becomes persistent working memory -- every decision, every failed approach, every discovery is written to disk. When the context window inevitably fills up, nothing is lost.
+A [Claude Code](https://docs.anthropic.com/en/docs/claude-code) skill that enforces a rigorous state machine: **Explore → Plan → Execute → Reflect → Replan.** The filesystem becomes persistent working memory -- every decision, every failed approach, every discovery is written to disk. When the context window inevitably fills up, nothing is lost.
 
 The problem it solves: Claude starts strong, plans once, then hits a wall. Instead of stepping back, it layers fixes on top of fixes, losing track of what it already tried. By the time context rot kicks in, it's forgotten what it was even doing. The result is worse than where it started.
 
@@ -49,11 +49,10 @@ stateDiagram-v2
     EXECUTE --> REFLECT : observe result
     REFLECT --> EXPLORE : need more context
     REFLECT --> CLOSE : solved
-    REFLECT --> RE_PLAN : not solved
-    RE_PLAN --> PLAN : revised approach
+    REFLECT --> REPLAN : not solved
+    REPLAN --> PLAN : revised approach
     CLOSE --> [*]
 ```
-> Note: Mermaid uses `RE_PLAN` (underscore) because hyphens are not valid in state names. Everywhere else, `RE-PLAN` (hyphen) is used.
 
 | State | What happens | Guardrails |
 |-------|-------------|------------|
@@ -61,7 +60,7 @@ stateDiagram-v2
 | **PLAN** | Design the approach. Identify every artifact to create or modify. Set success criteria. | No changes yet. User must approve before execution. |
 | **EXECUTE** | Implement one step at a time. Commit after each success. | 2 fix attempts max. Revert-first on failure. Surprises → REFLECT. |
 | **REFLECT** | Compare results against written criteria. Validate findings. | Evidence-based only. Contradicted findings → back to EXPLORE. |
-| **RE-PLAN** | Pivot based on what was learned. Log the decision. | Must explain what failed and why. User approves new direction. |
+| **REPLAN** | Pivot based on what was learned. Log the decision. | Must explain what failed and why. User approves new direction. |
 | **CLOSE** | Write summary. Audit decision anchors. Merge knowledge to consolidated files. | Verify clean output -- no leftover artifacts. |
 
 ---
@@ -144,7 +143,7 @@ Each state embeds domain-agnostic thinking tools:
 | **Assumption tracking** | PLAN | Every assumption traced to a finding, linked to dependent steps. When one breaks, you know what's invalidated. |
 | **Pre-mortem & falsification** | PLAN | Assume the plan failed -- why? Extract concrete STOP IF triggers. Prevents confirmation bias. |
 | **Prediction accuracy** | REFLECT | Compare predictions against actuals. Calibrates future estimates via LESSONS.md. |
-| **Ghost constraint hunting** | RE-PLAN | Before pivoting, check if the constraint behind the failed approach is still valid. |
+| **Ghost constraint hunting** | REPLAN | Before pivoting, check if the constraint behind the failed approach is still valid. |
 | **Essential vs accidental complexity** | REFLECT | "Inherent in the problem, or did we create it?" Essential = partition. Accidental = remove. |
 
 ### Revert-First Complexity Control
@@ -161,7 +160,7 @@ Plus hard limits to keep things honest:
 | Rule | What it does |
 |------|-------------|
 | **10-Line Rule** | If a "fix" needs more than 10 new lines, it's not a fix -- it needs a plan. |
-| **3-Strike Rule** | Same area breaks 3 times? The approach is wrong. Mandatory RE-PLAN. |
+| **3-Strike Rule** | Same area breaks 3 times? The approach is wrong. Mandatory REPLAN. |
 | **Complexity Budget** | Max 3 new files, max 2 new abstractions, target net-zero or negative line count. |
 | **Nuclear Option** | Iteration 5, scope doubled? Recommend full revert. Decision log preserves all learnings. |
 | **6 Simplification Checks** | Structured diagnostic: delete instead? symptom or root cause? essential or accidental? fighting the framework? worth reverting everything? |
@@ -224,10 +223,10 @@ node <skill-path>/scripts/validate-plan.mjs                  # Validate active p
 
 | Phase | Git behavior |
 |-------|-------------|
-| EXPLORE, PLAN, REFLECT, RE-PLAN | No commits. |
+| EXPLORE, PLAN, REFLECT, REPLAN | No commits. |
 | EXECUTE (success) | Commit after each step: `[iter-N/step-M] description` |
 | EXECUTE (failure) | Revert all uncommitted changes to last clean commit. |
-| RE-PLAN | Decide: keep successful commits or revert to checkpoint. |
+| REPLAN | Decide: keep successful commits or revert to checkpoint. |
 | CLOSE | Final commit with summary. |
 
 Bootstrap automatically adds `plans/` to `.gitignore`. Remove this if your team wants decision logs for post-mortems.

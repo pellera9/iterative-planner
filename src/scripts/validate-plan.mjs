@@ -28,15 +28,15 @@ const VALID_TRANSITIONS = new Set([
   "PLAN→EXECUTE",
   "EXECUTE→REFLECT",
   "REFLECT→CLOSE",
-  "REFLECT→RE-PLAN",
+  "REFLECT→REPLAN",
   "REFLECT→EXPLORE",
-  "RE-PLAN→PLAN",
+  "REPLAN→PLAN",
   // Bootstrap-generated transitions
   "EXPLORE→CLOSE",   // bootstrap close from EXPLORE
   "PLAN→CLOSE",      // bootstrap close from PLAN
   "EXECUTE→CLOSE",   // bootstrap close from EXECUTE
   "REFLECT→CLOSE",   // already covered above
-  "RE-PLAN→CLOSE",   // bootstrap close from RE-PLAN
+  "REPLAN→CLOSE",   // bootstrap close from REPLAN
   "UNKNOWN→CLOSE",   // bootstrap close fallback
 ]);
 
@@ -128,9 +128,9 @@ function checkStateTransitions(planDir, issues) {
 
     const from = match[1].trim().replace(/-/g, "-").toUpperCase();
     const to = match[2].trim().replace(/-/g, "-").toUpperCase();
-    // Normalize RE_PLAN and RE-PLAN
-    const normFrom = from.replace(/RE[_-]PLAN/g, "RE-PLAN");
-    const normTo = to.replace(/RE[_-]PLAN/g, "RE-PLAN");
+    // Normalize RE_PLAN and RE-PLAN to REPLAN
+    const normFrom = from.replace(/RE[_-]PLAN/g, "REPLAN");
+    const normTo = to.replace(/RE[_-]PLAN/g, "REPLAN");
     const key = `${normFrom}→${normTo}`;
 
     if (!VALID_TRANSITIONS.has(key)) {
@@ -150,7 +150,7 @@ function checkPlanSections(planDir, issues) {
   const currentState = extractField(state, /^# Current State:\s*(.+)$/m) || "";
 
   // Only check for non-placeholder content if past EXPLORE (plan should be filled during PLAN)
-  const requireContent = ["EXECUTE", "REFLECT", "RE-PLAN", "CLOSE"].includes(currentState.toUpperCase());
+  const requireContent = ["EXECUTE", "REFLECT", "REPLAN", "CLOSE"].includes(currentState.toUpperCase());
 
   for (const section of PLAN_SECTIONS) {
     const content = extractSection(plan, section);

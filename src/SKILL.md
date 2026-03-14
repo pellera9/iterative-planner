@@ -2,7 +2,7 @@
 name: iterative-planner
 description: >
   State-machine driven iterative planning and execution for complex coding tasks.
-  Cycle: Explore → Plan → Execute → Reflect → Re-plan. Filesystem as persistent memory.
+  Cycle: Explore → Plan → Execute → Reflect → Replan. Filesystem as persistent memory.
   Use for multi-file tasks, migrations, refactoring, failed tasks, or anything non-trivial.
 ---
 
@@ -26,12 +26,11 @@ stateDiagram-v2
     PLAN --> EXECUTE : user approves
     EXECUTE --> REFLECT : phase ends/failed/surprise/leash
     REFLECT --> CLOSE : all criteria met
-    REFLECT --> RE_PLAN : failed / better approach
+    REFLECT --> REPLAN : failed / better approach
     REFLECT --> EXPLORE : need more context
-    RE_PLAN --> PLAN : new approach ready
+    REPLAN --> PLAN : new approach ready
     CLOSE --> [*]
 ```
-> Note: Mermaid uses `RE_PLAN` (underscore) because hyphens are not valid in state names. Everywhere else in this document, `RE-PLAN` (hyphen) is used.
 
 | State | Purpose | Allowed Actions |
 |-------|---------|-----------------|
@@ -39,7 +38,7 @@ stateDiagram-v2
 | PLAN | Design approach | Write plan.md. NO code changes. |
 | EXECUTE | Implement step-by-step | Edit files, run commands, write code. |
 | REFLECT | Evaluate results | Read outputs, run tests. Update decisions.md. |
-| RE-PLAN | Revise direction | Log pivot in decisions.md. Do NOT write plan.md yet. |
+| REPLAN | Revise direction | Log pivot in decisions.md. Do NOT write plan.md yet. |
 | CLOSE | Finalize | Write summary.md. Audit decision anchors. Merge findings/decisions to consolidated files. Update LESSONS.md (≤200 lines). Compress if >500 lines. |
 
 ### Transitions
@@ -52,13 +51,13 @@ stateDiagram-v2
 | PLAN → EXECUTE | User explicitly approves. |
 | EXECUTE → REFLECT | Execution phase ends (all steps done, failure, surprise, or leash hit). |
 | REFLECT → CLOSE | All criteria verified PASS in `verification.md`. **User confirms.** |
-| REFLECT → RE-PLAN | Failure or better approach found. |
-| REFLECT → EXPLORE | Need more context before re-planning. |
-| RE-PLAN → PLAN | New approach formulated. Decision logged. |
+| REFLECT → REPLAN | Failure or better approach found. |
+| REFLECT → EXPLORE | Need more context before replanning. |
+| REPLAN → PLAN | New approach formulated. Decision logged. |
 
-> **Bootstrap shortcuts**: `bootstrap.mjs close` allows closing from any state (EXPLORE→CLOSE, PLAN→CLOSE, EXECUTE→CLOSE, RE-PLAN→CLOSE). These are administrative exits — the protocol CLOSE steps (summary.md, decision audit, LESSONS.md update) should be completed by the agent before running `close`.
+> **Bootstrap shortcuts**: `bootstrap.mjs close` allows closing from any state (EXPLORE→CLOSE, PLAN→CLOSE, EXECUTE→CLOSE, REPLAN→CLOSE). These are administrative exits — the protocol CLOSE steps (summary.md, decision audit, LESSONS.md update) should be completed by the agent before running `close`.
 
-Every transition → log in `state.md`. RE-PLAN transitions → also log in `decisions.md` (what failed, what learned, why new direction).
+Every transition → log in `state.md`. REPLAN transitions → also log in `decisions.md` (what failed, what learned, why new direction).
 At CLOSE → audit decision anchors (`references/decision-anchoring.md`). Merge per-plan findings/decisions to `plans/FINDINGS.md` and `plans/DECISIONS.md`. Update `plans/LESSONS.md` with significant lessons (rewrite to ≤200 lines). Compress consolidated files if >500 lines (see "Consolidated File Management").
 
 ### Protocol Tiers
@@ -74,7 +73,7 @@ These files are active working memory. Re-read during the conversation, not just
 | Before any EXECUTE step | `state.md`, `plan.md`, `progress.md` | Confirm step, manifest, fix attempts, progress sync |
 | Before writing a fix | `decisions.md` | Don't repeat failed approaches. Check 3-strike. |
 | Before modifying `DECISION`-commented code | Referenced `decisions.md` entry | Understand why before changing |
-| Before PLAN or RE-PLAN | `decisions.md`, `findings.md`, `findings/*`, `plans/LESSONS.md` | Ground plan in known facts + institutional memory |
+| Before PLAN or REPLAN | `decisions.md`, `findings.md`, `findings/*`, `plans/LESSONS.md` | Ground plan in known facts + institutional memory |
 | Before any REFLECT | `plan.md` (criteria), `progress.md`, `verification.md` | Compare against written criteria, not vibes |
 | Every 10 tool calls | `state.md` | Reorient. Right step? Scope crept? |
 
@@ -128,7 +127,7 @@ R = read only | W = update (implicit read + write) | R+W = distinct read and wri
 
 **Read-before-write rule**: Always read a plan file before writing/overwriting it — even on the first update after bootstrap. Claude Code's Write tool will reject writes to files you haven't read in the current session. This applies to every W and R+W cell below.
 
-| File | EXPLORE | PLAN | EXECUTE | REFLECT | RE-PLAN | CLOSE |
+| File | EXPLORE | PLAN | EXECUTE | REFLECT | REPLAN | CLOSE |
 |------|---------|------|---------|---------|---------|-------|
 | state.md | W | W | R+W | W | W | W |
 | plan.md | — | W | R+W | R | R | R |
@@ -187,7 +186,7 @@ Institutional memory across plans. Unlike FINDINGS.md and DECISIONS.md which gro
 
 **When to update**: At CLOSE, before running `bootstrap.mjs close`. Read the current file, integrate significant lessons from the plan, and rewrite the entire file — consolidating, deduplicating, and pruning stale entries.
 
-**When to read**: Before PLAN, before RE-PLAN, and at start of EXPLORE. This is the first thing to check for institutional memory — what patterns work, what doesn't, what to avoid.
+**When to read**: Before PLAN, before REPLAN, and at start of EXPLORE. This is the first thing to check for institutional memory — what patterns work, what doesn't, what to avoid.
 
 **Rules**:
 - **Hard cap: 200 lines.** If an update would exceed 200 lines, consolidate aggressively — merge related lessons, drop low-value entries, tighten wording.
@@ -258,7 +257,7 @@ On **failed step**: skip gate. Follow Autonomy Leash (revert-first, 2 attempts m
 ### REFLECT
 - Read `plan.md` (criteria + verification strategy) + `progress.md` before evaluating.
 - Read `findings.md` + relevant `findings/*` — check if discoveries during EXECUTE contradict earlier findings. Note contradictions in `decisions.md`.
-- Read `checkpoints/*` — know what rollback options exist before deciding next transition. Note available restore points in `decisions.md` if transitioning to RE-PLAN.
+- Read `checkpoints/*` — know what rollback options exist before deciding next transition. Note available restore points in `decisions.md` if transitioning to REPLAN.
 - Cross-validate: every `[x]` in plan.md must be "Completed" in progress.md. Fix drift first.
 - **Run verification** — execute each check defined in the Verification Strategy. Read `verification.md`, then record results: criterion, method, command/action, result (PASS/FAIL), evidence (output summary or log reference). See `references/file-formats.md` for template.
 - **Run `validate-plan.mjs`** — protocol compliance check. Address any ERRORs before CLOSE. WARNs are advisory.
@@ -275,15 +274,15 @@ On **failed step**: skip gate. Follow Autonomy Leash (revert-first, 2 attempts m
 1. What was completed (from `progress.md`)
 2. What remains (if anything)
 3. Verification results summary (PASS/FAIL counts from `verification.md`)
-4. Recommend: close, re-plan, or explore — **wait for user confirmation**
+4. Recommend: close, replan, or explore — **wait for user confirmation**
 
 | Condition | → Transition |
 |-----------|--------------|
 | All criteria verified PASS in `verification.md` + **user confirms** | → CLOSE |
-| Failure understood, new approach clear | → RE-PLAN |
+| Failure understood, new approach clear | → REPLAN |
 | Unknowns need investigation, or findings contradicted | → EXPLORE (update findings first) |
 
-### RE-PLAN
+### REPLAN
 - Read `decisions.md`, `findings.md`, relevant `findings/*`, `plans/LESSONS.md`.
 - Read `checkpoints/*` — decide keep vs revert. Default: if unsure, revert to latest checkpoint. See `references/code-hygiene.md` for full decision framework.
 - **Ghost constraint scan** *(EXTENDED — skip for iteration 1)* — before designing a new approach, ask: (1) Is the constraint that led to the failed approach still valid? (2) Are we inheriting environmental constraints that are actually preferences? (3) Did an early finding become stale? Log ghost constraints found in `decisions.md`. See `references/planning-rigor.md`.
@@ -298,7 +297,7 @@ Default response to failure = simplify, not add. See `references/complexity-cont
 
 **Revert-First** — when something breaks: (1) STOP (2) revert? (3) delete? (4) one-liner? (5) none → REFLECT.
 **10-Line Rule** — fix needs >10 new lines → it's not a fix → REFLECT.
-**3-Strike Rule** — same area breaks 3× → RE-PLAN with fundamentally different approach. Revert to checkpoint covering the struck area.
+**3-Strike Rule** — same area breaks 3× → REPLAN with fundamentally different approach. Revert to checkpoint covering the struck area.
 **Complexity Budget** — tracked in plan.md: files added 0/3, abstractions 0/2, lines net-zero target.
 **Forbidden**: wrapper cascades, config toggles, copy-paste, exception swallowing, type escapes, adapters, "temporary" workarounds.
 **Nuclear Option** — iteration 5 + bloat >2× scope → recommend full revert to `cp-000` (or later checkpoint if user agrees). Otherwise proceed with caution. See `references/complexity-control.md`.
@@ -312,13 +311,13 @@ When a step fails during EXECUTE:
 4. Present: what step should do, what happened, 2 attempts, root cause guess, available checkpoints for rollback.
 5. Transition → REFLECT. Log leash hit in `state.md`. Wait for user.
 
-Track attempts in `state.md`. Resets on: user direction, new step, or RE-PLAN.
+Track attempts in `state.md`. Resets on: user direction, new step, or REPLAN.
 **No exceptions.** Unguided fix chains derail projects.
 
 ## Code Hygiene (CRITICAL)
 
 Failed code must not survive. Track changes in **change manifest** in `state.md`.
-Failed step → revert all uncommitted. RE-PLAN → explicitly decide keep vs revert.
+Failed step → revert all uncommitted. REPLAN → explicitly decide keep vs revert.
 Codebase must be known-good before any PLAN. See `references/code-hygiene.md`.
 
 ## Decision Anchoring (CRITICAL)
@@ -350,9 +349,9 @@ Increment on PLAN → EXECUTE. Iteration 0 = EXPLORE-only (pre-plan). First real
 
 ## Git Integration
 
-- EXPLORE/PLAN/REFLECT/RE-PLAN: no commits.
+- EXPLORE/PLAN/REFLECT/REPLAN: no commits.
 - EXECUTE: commit per successful step `[iter-N/step-M] desc`. Failed step → revert uncommitted.
-- RE-PLAN: keep successful commits if valid under new plan, or `git checkout <checkpoint-commit> -- .` to revert. No partial state. Log choice in `decisions.md`.
+- REPLAN: keep successful commits if valid under new plan, or `git checkout <checkpoint-commit> -- .` to revert. No partial state. Log choice in `decisions.md`.
 - CLOSE: final commit + tag.
 
 ## User Interaction
@@ -362,8 +361,8 @@ Increment on PLAN → EXECUTE. Iteration 0 = EXPLORE-only (pre-plan). First real
 | EXPLORE | Ask focused questions, one at a time. Present findings. |
 | PLAN | Present plan. Wait for approval. Re-present if modified. |
 | EXECUTE | Report per step. Surface surprises. Ask before deviating. |
-| REFLECT | Show completed vs remaining. Present verification results. **Ask** user: close, re-plan, or explore. Never auto-close. |
-| RE-PLAN | Reference decision log. Explain pivot. Get approval. |
+| REFLECT | Show completed vs remaining. Present verification results. **Ask** user: close, replan, or explore. Never auto-close. |
+| REPLAN | Reference decision log. Explain pivot. Get approval. |
 
 ## When NOT to Use
 
