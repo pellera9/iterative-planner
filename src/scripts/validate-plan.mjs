@@ -212,6 +212,17 @@ function checkCrossFileConsistency(planDir, issues) {
     }
   }
 
+  // Check convergence metrics in verification.md for iteration 2+ REFLECT
+  if (["REFLECT", "CLOSE"].includes(currentState.toUpperCase())) {
+    const verification = readFile(join(planDir, "verification.md"));
+    const stateIter = extractField(state, /^## Iteration:\s*(.+)$/m);
+    if (verification && stateIter && parseInt(stateIter) >= 2) {
+      if (!verification.includes("## Convergence Metrics") || !verification.includes("Convergence score")) {
+        issues.push({ severity: "WARN", check: "convergence", message: "verification.md missing Convergence Metrics for iteration 2+ (EXTENDED check — see references/convergence-metrics.md)" });
+      }
+    }
+  }
+
   // Check that summary.md exists at CLOSE
   if (currentState.toUpperCase() === "CLOSE") {
     if (!existsSync(join(planDir, "summary.md"))) {
